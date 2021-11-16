@@ -1,0 +1,24 @@
+node{
+    def mavenHome = tool name: "maven3.8.2"
+    
+    stage("Pull code from GitHub")
+    {
+        git branch: 'development', credentialsId: 'GITHUB_PASSWORD', url: 'https://github.com/Test4DevOps/maven-web-application.git'
+    }
+    
+    stage('Build')
+    {
+    sh "${mavenHome}/bin/mvn clean package"    
+    }
+    
+    stage('DeployApptoTomcatServer'){
+        sshagent(['c19180df-21de-4949-a645-c5d8ce74049c']) {
+    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@65.2.81.74:/opt/apache-tomcat-9.0.54/webapps"
+      }
+        
+    }
+    
+    stage('SendEmailNotification'){
+        emailext body: 'build over', subject: 'build over', to: 'shekhar.pamula@gmail.com'
+    }
+}
